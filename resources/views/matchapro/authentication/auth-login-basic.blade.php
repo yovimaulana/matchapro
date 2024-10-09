@@ -87,6 +87,7 @@
                             </div>
                         </div>
                         <button class="btn btn-primary w-100" tabindex="4">Sign in</button>
+                        <a href="{{ $authUrl }}" class="btn btn-secondary w-100 mt-1">Sign in with SSO BPS</a>
                     </form>
 
                     <p class="text-center mt-2">

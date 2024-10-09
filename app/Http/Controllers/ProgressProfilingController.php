@@ -3,9 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\MasterWilayahController;
+use DB;
 
 class ProgressProfilingController extends Controller
 {
+
+    protected $masterWilayah;    
+
+    public function __construct(MasterWilayahController $masterWilayah) {
+        $this->masterWilayah = $masterWilayah;        
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -13,11 +22,14 @@ class ProgressProfilingController extends Controller
      */
     public function wilayah_index()
     {
+        $mp = $this->masterWilayah->getMasterProvinsi();
         $pageConfigs = ['sidebarCollapsed' => false];
         $breadcrumbs = [
-            ['link' => "home", 'name' => "Progress Profiling"], ['link' => "javascript:void(0)", 'name' => "Wilayah"], ['name' => "Collapsed menu"]
+            ['link' => "home", 'name' => "Progress Profiling"], ['name' => "Wilayah"]
         ];
-        return view('/matchapro/page/progress_profiling_wilayah', ['breadcrumbs' => $breadcrumbs, 'pageConfigs' => $pageConfigs]);
+        return view('/matchapro/page/progress_profiling_wilayah', ['breadcrumbs' => $breadcrumbs, 'pageConfigs' => $pageConfigs,
+        'masterProvinsi' => $mp
+    ]);
 
     }
 

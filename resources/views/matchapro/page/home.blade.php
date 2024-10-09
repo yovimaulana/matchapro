@@ -11,9 +11,8 @@
 
         </div>
         <div class="card-body">
-            <div class="card-text">
-                {{-- {{ dd($menuData[0]->menu) }} --}}
-                <p>
+            <div class="card-text">                
+                <p>                    
                     MatchaPro adalah Matching Assessment Profiling blablabla {{ Route::currentRouteName() }}
                     {{-- Getting start with your project custom requirements using a ready template which is quite difficult and
                     time

@@ -11,6 +11,8 @@ use App\Http\Controllers\ProfilingController;
 use App\Http\Controllers\FormCreateUsahaController;
 use App\Http\Controllers\FormUpdateUsahaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MasterWilayahController;
+use App\Http\Controllers\MasterKBLi;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -28,7 +30,7 @@ Route::get('login', [AuthController::class, 'index'])->name('login');
 Route::post('login', [AuthController::class, 'login'])->name('login.post');
 
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['sso-bps'])->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -43,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
 
     //Direktori Usaha
     Route::get('direktori-usaha', [DirektoriUsahaController::class, 'index'])->name('direktori_usaha.index');
+    Route::get('direktori-usaha/data', [DirektoriUsahaController::class, 'getDirektoriUsahaData'])->name('direktori_usaha.data');
+    Route::post('direktori-usaha/data-by-id', [DirektoriUsahaController::class, 'getDirektoriUsahaDataById'])->name('direktori_usaha.data_by_id');
 
     //Profiling
     Route::get('profiling', [ProfilingController::class, 'index'])->name('profiling.index');
@@ -54,9 +58,24 @@ Route::middleware(['auth'])->group(function () {
 
     //Update Usaha - Form
     Route::get('profiling/update/usaha/{perusahaan_id}/{alokasi_id}', [FormUpdateUsahaController::class, 'index'])->name('form_update_usaha.index');
+    Route::post('profiling/update/usaha/{perusahaan_id}/{alokasi_id}', [FormUpdateUsahaController::class, 'save'])->name('form_update_usaha.save');
     
     //dari direktori usaha
-    Route::get('profiling/update/usaha/{perusahaan_id}', [FormUpdateUsahaController::class, 'index'])->name('form_update_usaha2.index');
+    Route::get('profiling/update/usaha/{perusahaan_id}', [FormUpdateUsahaController::class, 'formUpdateFromDirektoriUsaha'])->name('form_update_usaha2.index');
+
+    // halaman kalo periode profiling mandiri lagi tutup
+    Route::get('profiling/periode-mandiri-tutup', [FormUpdateUsahaController::class, 'periodeProfilingMandiriTutup'])->name('periode_profiling_mandiri_tutup.index');
+    // halaman kalo user coba akses kerjaan orang lain
+    Route::get('profiling/unauthorized', [FormUpdateUsahaController::class, 'lagiDikerjainOrangLain'])->name('lagi_dikerjain_orang_lain.index');    
+    // halaman buat nampilin kalo something error happened
+    Route::get('profiling/error', [FormUpdateUsahaController::class, 'errorPage'])->name('error_page.index');
+
+    Route::get('master-provinsi', [MasterWilayahController::class, 'getMasterProvinsi'])->name('master-provinsi.data');
+    Route::post('wil-desa', [MasterWilayahController::class, 'getDesa'])->name('wil-desa');
+    Route::post('wil-kecamatan', [MasterWilayahController::class, 'getKecamatan'])->name('wil-kecamatan');
+    Route::post('wil-kabupaten-kota', [MasterWilayahController::class, 'getKabupaten'])->name('wil-kabupaten-kota');
+    Route::post('master-kbli', [MasterKBLI::class, 'getMasterKBLI'])->name('master-kbli');
+    Route::post('check-idsbr', [FormUpdateUsahaController::class, 'checkIDSBR'])->name('check-idsbr');
 });
 
 //End Matcha Pro

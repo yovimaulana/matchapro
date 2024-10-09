@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use DB;
+use Illuminate\Support\Facades\Crypt;
 
 class DirektoriUsahaController extends Controller
 {
@@ -14,65 +15,284 @@ class DirektoriUsahaController extends Controller
      */
     public function index(Request $request)
     {
-        //
+        $usaha = DB::table('business_perusahaan')
+            ->selectRaw("
+                CASE 
+                    WHEN status_perusahaan_id IN (1, 2, 3, 5, 8) THEN 'aktif'
+                    WHEN status_perusahaan_id IN (4, 6, 7, 9) THEN 'tidak_aktif'
+                    WHEN status_perusahaan_id IS NULL THEN 'undefined'
+                END AS status_usaha,
+                COUNT(*) AS total
+            ")
+            ->where(function($query) {
+                $query->where('status_perusahaan_id', '<>', 10)
+                      ->orWhereNull('status_perusahaan_id');
+            })
+            ->groupBy(DB::raw("
+                CASE 
+                    WHEN status_perusahaan_id IN (1, 2, 3, 5, 8) THEN 'aktif'
+                    WHEN status_perusahaan_id IN (4, 6, 7, 9) THEN 'tidak_aktif'
+                    WHEN status_perusahaan_id IS NULL THEN 'undefined'
+                END
+            "))
+            ->get();
+        $usaha_aktif = $usaha->where('status_usaha', 'aktif')->first()->total ?? 0;
+        $usaha_tidak_aktif = $usaha->where('status_usaha', 'tidak_aktif')->first()->total ?? 0;
+        $usaha_undefined = $usaha->where('status_usaha', 'undefined')->first()->total ?? 0;
         $pageConfigs = ['sidebarCollapsed' => false];
         $breadcrumbs = [
-            ['link' => "home", 'name' => "Home"], ['link' => "javascript:void(0)", 'name' => "Layouts"], ['name' => "Collapsed menu"]
-        ];
+            ['link' => "home", 'name' => "Home"], ['name' => "Direktori Usaha"]
+        ];                    
 
-          // Temporarily configure the SQL Server connection
-        
-        if ($request->ajax()) {
-            // Fetching businesses with joins and pagination
-            $businesses = DB::table('business_perusahaan as bp')
-                ->join('area_provinsi as ap', function ($join) {
-                    $join->on('ap.id', '=', 'bp.provinsi_id')
-                        ->where('ap.snapshot_id', '=', 4);
-                })
-                ->join('area_kabupaten_kota as akk', 'akk.id', '=', 'bp.kabupaten_kota_id')
-                ->join('area_kecamatan as ak', 'ak.id', '=', 'bp.kecamatan_id')
-                ->join('area_kelurahan_desa as akd', 'akd.id', '=', 'bp.kelurahan_desa_id')
-                ->select(
-                    'bp.id as business_id', 'bp.kode as business_kode', 'bp.nama as business_nama', 'bp.nama_komersial as business_nama_komersial', 'bp.alamat as business_alamat',
-                    'ap.nama as provinsi_nama',
-                    'akk.nama as kabupaten_nama',
-                    'ak.nama as kecamatan_nama',
-                    'akd.nama as kelurahan_nama'
-                );
+        //redirect ke halaman direktori usaha
+        return view('/matchapro/page/direktori_usaha', 
+        ['breadcrumbs' => $breadcrumbs, 
+        'pageConfigs' => $pageConfigs,
+        'usaha_aktif' => $usaha_aktif, 
+        'usaha_tidak_aktif' => $usaha_tidak_aktif, 
+        'usaha_undefined' => $usaha_undefined
+        ]);
+    }
 
-            $businesses = $businesses->paginate(10);
+    public function searchUsingFREETEXTTABLE($nama_usaha, $alamat_usaha, $provinsi_id = null, $kabupaten_kota_id = null) {
+        $subquery = DB::table('business_perusahaan as FT_TBL')
+            ->selectRaw("
+                CASE 
+                    WHEN KEY_TBL.RANK IS NOT NULL AND KEY_TBL2.RANK IS NOT NULL 
+                        THEN 3.0 * KEY_TBL.RANK + 1.5 * KEY_TBL2.RANK 
+                    ELSE 0 
+                END AS skor_kalo,
+                KEY_TBL.RANK AS rank_nama,
+                KEY_TBL2.RANK AS rank_alamat,
+                FT_TBL.id AS perusahaan_id,
+                FT_TBL.nama,
+                FT_TBL.alamat,
+                FT_TBL.kode AS idsbr,
+                FT_TBL.provinsi_id,
+                FT_TBL.kabupaten_kota_id,
+                FT_TBL.kecamatan_id,
+                FT_TBL.kelurahan_desa_id,
+                FT_TBL.status_perusahaan_id
+            ")
+            ->leftJoin(DB::raw("FREETEXTTABLE(business_perusahaan, nama, ?) AS KEY_TBL"), 'FT_TBL.id', '=', DB::raw('KEY_TBL.[KEY]'))
+            ->leftJoin(DB::raw("FREETEXTTABLE(business_perusahaan, alamat, ?) AS KEY_TBL2"), 'FT_TBL.id', '=', DB::raw('KEY_TBL2.[KEY]'))
+            ->when($provinsi_id, function($query, $provinsi_id) {
+                return $query->where('FT_TBL.provinsi_id', $provinsi_id);
+            })
+            ->when($kabupaten_kota_id, function($query, $kabupaten_kota_id) {
+                return $query->where('FT_TBL.kabupaten_kota_id', $kabupaten_kota_id);
+            });          
+            // ->where(function($query) {
+            //     $query->where('status_perusahaan_id', '!=', 9)
+            //         ->orWhereNull('status_perusahaan_id');
+            // })
+            // ->orderBy('skor_kalo', 'desc');
+            // ->limit(10);
+            
+            $dir_usaha = DB::table(DB::raw("({$subquery->toSql()}) as FT_RESULT"))
+            ->mergeBindings($subquery)
+            ->addBinding([$nama_usaha, $alamat_usaha], 'join')
+            ->leftJoin('area_provinsi as ap', function($join) {
+                $join->on('ap.id', '=', 'FT_RESULT.provinsi_id')
+                    ->where('ap.snapshot_id', 4);
+            })->leftJoin('area_kabupaten_kota as akk', function($join) {
+                $join->on('akk.id', '=', 'FT_RESULT.kabupaten_kota_id')
+                    ->on('akk.provinsi_id', '=', 'ap.id');
+            })->leftJoin('area_kecamatan as ak', function($join) {
+                $join->on('ak.id', '=', 'FT_RESULT.kecamatan_id')
+                    ->on('ak.kabupaten_kota_id', '=', 'akk.id');
+            })->leftJoin('area_kelurahan_desa as akd', function($join) {
+                $join->on('akd.id', '=', 'FT_RESULT.kelurahan_desa_id')
+                    ->on('akd.kecamatan_id', '=', 'ak.id');
+            })->leftJoin('business_ref_status_perusahaan as ss', 'ss.id', '=', 'FT_RESULT.status_perusahaan_id')
+            ->select(
+                'FT_RESULT.idsbr', 'FT_RESULT.nama as nama_usaha', 'FT_RESULT.alamat as alamat_usaha', 
+                DB::raw("CONCAT(ap.kode, akk.kode, ak.kode, akd.kode) as kode_wilayah"), 
+                'ap.kode as kdprov', 'akk.kode as kdkab', 'ak.kode as kdkec', 'akd.kode as kddesa',
+                'ap.nama as nmprov', 'akk.nama as nmkab', 'ak.nama as nmkec', 'akd.nama as nmdesa',
+                'FT_RESULT.perusahaan_id', 'ss.nama as status_perusahaan', 'ss.id as status_perusahaan_id', 
+                'FT_RESULT.skor_kalo'
+            )
+            ->where('skor_kalo', '>', 0)
+            ->orderBy('skor_kalo', 'desc');  
 
-            return response()->json([
-                'draw' => intval($request->input('draw')),
-                'recordsTotal' => $businesses->total(),
-                'recordsFiltered' => $businesses->total(),
-                'data' => $businesses->items(),
-            ]);
-        }
+            return $dir_usaha;
+    }
 
-        // Use the new temporary connection
-        $businesses = DB::table('business_perusahaan as bp')
+    public function getDataNormally() {
+        $dir_usaha = DB::table('business_perusahaan as bp')
             ->join('area_provinsi as ap', function($join) {
                 $join->on('ap.id', '=', 'bp.provinsi_id')
                     ->where('ap.snapshot_id', '=', 4);
             })
-            ->join('area_kabupaten_kota as akk', 'akk.id', '=', 'bp.kabupaten_kota_id')
-            ->join('area_kecamatan as ak', 'ak.id', '=', 'bp.kecamatan_id')
-            ->join('area_kelurahan_desa as akd', 'akd.id', '=', 'bp.kelurahan_desa_id')
+            ->join('area_kabupaten_kota as akk', function($join) {
+                $join->on('akk.id', '=', 'bp.kabupaten_kota_id')
+                    ->on('akk.provinsi_id', '=' , 'ap.id');
+            })
+            ->leftJoin('area_kecamatan as ak', function($join) {
+                $join->on('ak.id' , '=', 'bp.kecamatan_id')
+                    ->on('ak.kabupaten_kota_id', '=', 'akk.id');
+            })
+            ->leftJoin('area_kelurahan_desa as akd', function($join) {
+                $join->on('akd.id', '=', 'bp.kelurahan_desa_id')
+                    ->on('akd.kecamatan_id', '=', 'ak.id');
+            })
+            ->leftJoin('business_ref_status_perusahaan as ss', 'ss.id', '=', 'bp.status_perusahaan_id')
             ->select(
-                'bp.id as business_id', 'bp.kode as business_kode', 'bp.nama as business_nama', 'bp.nama_komersial as business_nama_komersial', 'bp.alamat as business_alamat',
-                'ap.id as provinsi_id', 'ap.kode as provinsi_kode', 'ap.nama as provinsi_nama',
-                'akk.id as kabupaten_id', 'akk.kode as kabupaten_kode', 'akk.nama as kabupaten_nama',
-                'ak.id as kecamatan_id', 'ak.kode as kecamatan_kode', 'ak.nama as kecamatan_nama',
-                'akd.id as kelurahan_id', 'akd.kode as kelurahan_kode', 'akd.nama as kelurahan_nama'
-            )
-            ->paginate(10);
+                'bp.kode as idsbr', 'bp.nama as nama_usaha', 'bp.alamat as alamat_usaha',
+                DB::raw("CONCAT(ap.kode, akk.kode, ak.kode, akd.kode) as kode_wilayah"), 
+                'ap.kode as kdprov', 'akk.kode as kdkab', 'ak.kode as kdkec', 'akd.kode as kddesa',
+                'ap.nama as nmprov', 'akk.nama as nmkab', 'ak.nama as nmkec', 'akd.nama as nmdesa',
+                'bp.id as perusahaan_id', 'ss.nama as status_perusahaan', 'ss.id as status_perusahaan_id'
+            );
 
-            //redirect ke halaman direktori usaha
-            return view('/matchapro/page/direktori_usaha', 
-            ['breadcrumbs' => $breadcrumbs, 
-            'pageConfigs' => $pageConfigs,
-            'businesses' => $businesses]);
+        return $dir_usaha;
+    }    
+
+
+
+    public function getDirektoriUsahaData(Request $request) {
+
+        if($request->filled('nama_usaha') && $request->filled('alamat_usaha')) {                      
+            $dir_usaha = $this->searchUsingFREETEXTTABLE($request->nama_usaha, $request->alamat_usaha);
+        } else {
+            $dir_usaha = $this->getDataNormally();
+        }      
+        
+        // sudah pasti get datanya dari getdatanormally, jadi bisa pake bp.nama dan bp.alamat
+        if($request->filled('nama_usaha') && !$request->filled('alamat_usaha')) {
+            $dir_usaha->whereRaw('FREETEXT(bp.nama, ?)', [$request->nama_usaha]);
+        }
+
+        // sudah pasti get datanya dari getdatanormally, jadi bisa pake bp.nama dan bp.alamat
+        if($request->filled('alamat_usaha') && !$request->filled('nama_usaha')) {
+            $dir_usaha->whereRaw('FREETEXT(bp.alamat, ?)', [$request->alamat_usaha]);
+        }
+
+        // filter berdasarkan status perusahaan
+        if ($request->filled('status_perusahaan')) {
+            if ($request->status_perusahaan != '-') {
+                if ($request->status_perusahaan == '') {
+                    $dir_usaha->whereNull('status_perusahaan_id');
+                } else {
+                    $dir_usaha->where('status_perusahaan_id', $request->status_perusahaan);
+                }
+            }
+        }
+
+        // kalau ada request pencarian by idsbr, jangan pake like query biar ga lambat
+        if($request->filled('idsbr')) {
+            if($request->filled('nama_usaha') && $request->filled('alamat_usaha')) {
+                $dir_usaha->where('idsbr', $request->idsbr);                
+            } else {
+                $dir_usaha->where('bp.kode', $request->idsbr);
+            }
+        }
+
+        $recordsTotal = $dir_usaha->count();
+
+        $start = $request->input('start');
+        $length = $request->input('length'); 
+        $dir_usaha= $dir_usaha->offset($start)->limit($length)->get();        
+
+        $data = [];
+        foreach($dir_usaha as $usaha) {
+            // encrypt dulu perusahaan_id nya biar kaya aman gitu...
+            $encrypted_id = Crypt::encrypt($usaha->perusahaan_id); // katanya fungsi Crypt ini udah url-safe gitu, jadi ga akan bikin break / error urlnya.
+
+            $temp['idsbr'] = $usaha->idsbr;
+            $temp['nama_usaha'] = $usaha->nama_usaha;
+            $temp['alamat_usaha'] = $usaha->alamat_usaha;
+            $temp['kode_wilayah'] = $usaha->kode_wilayah;
+            $temp['kdprov'] = $usaha->kdprov;
+            $temp['kdkab'] = $usaha->kdkab;
+            $temp['kdkec'] = $usaha->kdkec;
+            $temp['kddesa'] = $usaha->kddesa;
+            $temp['nmprov'] = $usaha->nmprov;
+            $temp['nmkab']= $usaha->nmkab;
+            $temp['nmkec'] = $usaha->nmkec;
+            $temp['nmdesa'] = $usaha->nmdesa;
+            $temp['perusahaan_id'] = $encrypted_id; // masukin dah perusahaan_id yg terenripsinya disini            
+            $temp['status_perusahaan'] = $usaha->status_perusahaan_id == 9 ? 'Duplikat' : $usaha->status_perusahaan;            
+            $temp['action'] = route('form_update_usaha2.index', $encrypted_id);
+            $temp['perusahaan_id'] = $encrypted_id;
+            $temp['skor_kalo'] = $usaha->skor_kalo ?? null;
+            $data[] = $temp;
+        }
+
+        return response()->json([
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsTotal,
+            'data' => $data,
+        ]);
+    }
+
+    public function getDirektoriUsahaDataById(Request $request) {
+        $perusahaan_id = Crypt::decrypt($request->input('perusahaan_id'));
+        $perusahaan = DB::table('business_perusahaan as bp')
+            ->leftJoin('area_provinsi as ap', 'ap.id', '=', 'bp.provinsi_id')
+            ->leftJoin('area_kabupaten_kota as akk', 'akk.id', '=', 'bp.kabupaten_kota_id')
+            ->leftJoin('area_kecamatan as ak', 'ak.id', '=', 'bp.kecamatan_id')
+            ->leftJoin('area_kelurahan_desa as akd', 'akd.id', '=', 'bp.kelurahan_desa_id')
+            ->leftJoin('business_ref_status_perusahaan as brsp', 'brsp.id', '=', 'bp.status_perusahaan_id')
+            ->select(
+                'bp.nama as nama_usaha',
+                'bp.nama_komersial as nama_komersial',
+                'bp.alamat as alamat_usaha',
+                'bp.kode_pos as kode_pos',
+                'bp.latitude as latitude',
+                'bp.longitude as longitude',
+                'bp.kode as idsbr',                
+                'ap.nama as nama_provinsi',
+                'akk.nama as nama_kabupaten_kota',
+                'ak.nama as nama_kecamatan',
+                'akd.nama as nama_kelurahan_desa',
+                'brsp.nama as status_perusahaan',
+                'ap.kode as kode_provinsi',
+                'akk.kode as kode_kabupaten_kota',      
+                'ak.kode as kode_kecamatan',
+                'akd.kode as kode_kelurahan_desa'                
+            )
+            ->where('bp.id', $perusahaan_id)
+            ->first();
+
+        $perusahaan = (array) $perusahaan;
+        
+        $kegiatan = DB::table('business_aktivitas_perusahaan as kap')->where('perusahaan_id', $perusahaan_id)
+                ->orderBy('kbli', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+        $perusahaan['kegiatan_utama'] = $kegiatan ? $kegiatan->aktivitas : null ;
+        $perusahaan['kbli'] = $kegiatan ? $kegiatan->kbli : null;
+        $perusahaan['kategori'] = $kegiatan ? $kegiatan->kategori : null;
+
+        $telepon = DB::table('business_alamat_telepon_perusahaan as batp')->where('perusahaan_id', $perusahaan_id)
+                ->orderBy('nomor_telepon', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+        $perusahaan['telepon'] = $telepon ? $telepon->nomor_telepon : null  ;
+
+        $email = DB::table('business_alamat_email_perusahaan as baep')->where('perusahaan_id', $perusahaan_id)
+                ->where('email', 'like', '%@%')
+                ->orderBy('id', 'desc')
+                ->first();
+        $perusahaan['email'] = $email ? $email->email : null;
+
+        $website = DB::table('business_alamat_web_perusahaan as bawp')->where('perusahaan_id', $perusahaan_id)
+                ->orderBy('website', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+        $perusahaan['website'] = $website ? $website->website : null; 
+
+        $produk = DB::table('business_produk_perusahaan as bpp')->where('perusahaan_id', $perusahaan_id)
+                ->orderBy('produk', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+        $perusahaan['produk'] = $produk ? $produk->produk : null;
+        $perusahaan['edit_link'] = route('form_update_usaha2.index', Crypt::encrypt($perusahaan_id));
+
+        return response()->json($perusahaan);
     }
 
     /**
