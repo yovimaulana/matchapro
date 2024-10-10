@@ -18,7 +18,10 @@ class DirektoriUsahaController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
-    {
+    {        
+        $viewProvinsi = auth()->user()->getPermissionsViaRoles()->contains('name','view-usaha-provinsi');
+        $viewKabupaten = auth()->user()->getPermissionsViaRoles()->contains('name','view-usaha-kabkot');        
+
         $usaha = DB::table('business_perusahaan')
             ->selectRaw("
                 CASE 
@@ -28,6 +31,12 @@ class DirektoriUsahaController extends Controller
                 END AS status_usaha,
                 COUNT(*) AS total
             ")
+            ->when($viewProvinsi, function($query) {
+                return $query->where('provinsi_id', auth()->user()->provinsi_id);
+            })
+            ->when($viewKabupaten, function($query) {
+                return $query->where('kabupaten_kota_id', auth()->user()->kabupaten_kota_id);
+            })
             ->where(function($query) {
                 $query->where('status_perusahaan_id', '<>', 10)
                       ->orWhereNull('status_perusahaan_id');
@@ -59,6 +68,9 @@ class DirektoriUsahaController extends Controller
     }
 
     public function searchUsingFREETEXTTABLE($nama_usaha, $alamat_usaha, $provinsi_id = null, $kabupaten_kota_id = null) {
+        $viewProvinsi = auth()->user()->getPermissionsViaRoles()->contains('name','view-usaha-provinsi');
+        $viewKabupaten = auth()->user()->getPermissionsViaRoles()->contains('name','view-usaha-kabkot');        
+        
         $subquery = DB::table('business_perusahaan as FT_TBL')
             ->selectRaw("
                 CASE 
@@ -80,12 +92,18 @@ class DirektoriUsahaController extends Controller
             ")
             ->leftJoin(DB::raw("FREETEXTTABLE(business_perusahaan, nama, ?) AS KEY_TBL"), 'FT_TBL.id', '=', DB::raw('KEY_TBL.[KEY]'))
             ->leftJoin(DB::raw("FREETEXTTABLE(business_perusahaan, alamat, ?) AS KEY_TBL2"), 'FT_TBL.id', '=', DB::raw('KEY_TBL2.[KEY]'))
-            ->when($provinsi_id, function($query, $provinsi_id) {
-                return $query->where('FT_TBL.provinsi_id', $provinsi_id);
+            ->when($viewProvinsi, function($query) {
+                return $query->where('FT_TBL.provinsi_id', auth()->user()->provinsi_id);
             })
-            ->when($kabupaten_kota_id, function($query, $kabupaten_kota_id) {
-                return $query->where('FT_TBL.kabupaten_kota_id', $kabupaten_kota_id);
-            });          
+            ->when($viewKabupaten, function($query) {
+                return $query->where('FT_TBL.kabupaten_kota_id', auth()->user()->kabupaten_kota_id);
+            });
+            // ->when($provinsi_id, function($query, $provinsi_id) {
+            //     return $query->where('FT_TBL.provinsi_id', $provinsi_id);
+            // })
+            // ->when($kabupaten_kota_id, function($query, $kabupaten_kota_id) {
+            //     return $query->where('FT_TBL.kabupaten_kota_id', $kabupaten_kota_id);
+            // });          
             // ->where(function($query) {
             //     $query->where('status_perusahaan_id', '!=', 9)
             //         ->orWhereNull('status_perusahaan_id');
@@ -124,6 +142,9 @@ class DirektoriUsahaController extends Controller
     }
 
     public function getDataNormally() {
+        $viewProvinsi = auth()->user()->getPermissionsViaRoles()->contains('name','view-usaha-provinsi');
+        $viewKabupaten = auth()->user()->getPermissionsViaRoles()->contains('name','view-usaha-kabkot');        
+
         $dir_usaha = DB::table('business_perusahaan as bp')
             ->join('area_provinsi as ap', function($join) {
                 $join->on('ap.id', '=', 'bp.provinsi_id')
@@ -148,8 +169,14 @@ class DirektoriUsahaController extends Controller
                 'ap.kode as kdprov', 'akk.kode as kdkab', 'ak.kode as kdkec', 'akd.kode as kddesa',
                 'ap.nama as nmprov', 'akk.nama as nmkab', 'ak.nama as nmkec', 'akd.nama as nmdesa',
                 'bp.id as perusahaan_id', 'ss.nama as status_perusahaan', 'ss.id as status_perusahaan_id'
-            );
-
+            )            
+            ->when($viewProvinsi, function($query) {
+                return $query->where('bp.provinsi_id', auth()->user()->provinsi_id);
+            })
+            ->when($viewKabupaten, function($query) {
+                return $query->where('bp.kabupaten_kota_id', auth()->user()->kabupaten_kota_id);
+            });
+            
         return $dir_usaha;
     }    
 
@@ -182,6 +209,11 @@ class DirektoriUsahaController extends Controller
                     $dir_usaha->where('status_perusahaan_id', $request->status_perusahaan);
                 }
             }
+        } else {
+            $dir_usaha->where(function($query) {
+                $query->where('status_perusahaan_id', '<>', 10)
+                    ->orWhereNull('status_perusahaan_id');
+            });
         }
 
         // kalau ada request pencarian by idsbr, jangan pake like query biar ga lambat
@@ -191,7 +223,7 @@ class DirektoriUsahaController extends Controller
             } else {
                 $dir_usaha->where('bp.kode', $request->idsbr);
             }
-        }
+        }            
 
         $recordsTotal = $dir_usaha->count();
 
