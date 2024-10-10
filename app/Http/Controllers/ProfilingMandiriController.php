@@ -40,10 +40,15 @@ class ProfilingMandiriController extends Controller
         $periode_id = $request->input('periode_id');
         
         $user = auth()->user();
-        
+        $provinsi_id = $user->provinsi_id;
+        $kabupaten_kota_id = $user->kabupaten_kota_id;
         $snapshot_id = DB::table('area_provinsi')->max('snapshot_id');
         
-        $query = DB::table('matchapro_alokasi_profiling as map')
+        
+        //cek wilayah
+        //User Prov
+        if ($provinsi_id && $kabupaten_kota_id == null) {
+            $query = DB::table('matchapro_alokasi_profiling as map')
                 ->join('matchapro_temporary_update_profiling as mtup', function ($join) {
                     $join->on('map.id', '=', 'mtup.alokasi_profiling_id')
                         ->whereRaw('mtup.updated_at = (SELECT MAX(mtup_inner.updated_at) FROM matchapro_temporary_update_profiling as mtup_inner WHERE mtup_inner.alokasi_profiling_id = map.id)');
@@ -58,7 +63,7 @@ class ProfilingMandiriController extends Controller
                 ->join('matchapro_users as mu', 'mu.id', '=', 'map.user_id')
                 ->leftJoin('matchapro_users as mu_updated', 'mu_updated.id', '=', 'mtup.updated_by') // New join
                 ->where('map.periode_id', $periode_id)
-                
+                ->where('ap.id', $provinsi_id)            
                 ->select([
                     'map.id', 
                     'map.perusahaan_id as perusahaan_id',
@@ -84,6 +89,98 @@ class ProfilingMandiriController extends Controller
                     'mu_updated.id as updated_by_id'
                 ]);
 
+        }
+
+        //User Kab
+        if ($provinsi_id && $kabupaten_kota_id) {
+            $query = DB::table('matchapro_alokasi_profiling as map')
+                ->join('matchapro_temporary_update_profiling as mtup', function ($join) {
+                    $join->on('map.id', '=', 'mtup.alokasi_profiling_id')
+                        ->whereRaw('mtup.updated_at = (SELECT MAX(mtup_inner.updated_at) FROM matchapro_temporary_update_profiling as mtup_inner WHERE mtup_inner.alokasi_profiling_id = map.id)');
+                })
+                ->join('area_provinsi as ap', function ($join) use ($snapshot_id) {
+                    $join->on('ap.id', '=', 'mtup.provinsi_id')
+                        ->where('ap.snapshot_id', '=', $snapshot_id);
+                })
+                ->join('area_kabupaten_kota as akk', 'akk.id', '=', 'mtup.kabupaten_kota_id')
+                ->leftJoin('area_kecamatan as ak', 'ak.id', '=', 'mtup.kecamatan_id')
+                ->leftJoin('area_kelurahan_desa as akd', 'akd.id', '=', 'mtup.kelurahan_desa_id')
+                ->join('matchapro_users as mu', 'mu.id', '=', 'map.user_id')
+                ->leftJoin('matchapro_users as mu_updated', 'mu_updated.id', '=', 'mtup.updated_by') // New join
+                ->where('map.periode_id', $periode_id)
+                ->where('ap.id', $provinsi_id)
+                ->where('akk.id', $kabupaten_kota_id)            
+                ->select([
+                    'map.id', 
+                    'map.perusahaan_id as perusahaan_id',
+                    'map.idsbr as kode', 
+                    'mtup.nama_usaha as nama', 
+                    'mtup.alamat', 
+                    'mtup.provinsi_id',
+                    'ap.kode as provinsi_kode',
+                    'ap.nama as provinsi_nama',
+                    'mtup.kabupaten_kota_id', 
+                    'akk.kode as kabupaten_kota_kode',
+                    'akk.nama as kabupaten_kota_nama',
+                    'mtup.kecamatan_id', 
+                    'ak.kode as kecamatan_kode',
+                    'ak.nama as kecamatan_nama',
+                    'mtup.kelurahan_desa_id',
+                    'akd.kode as kelurahan_desa_kode',
+                    'akd.nama as kelurahan_desa_nama',
+                    'map.action_type',
+                    'map.status_form',
+                    'map.updated_at',
+                    'mu_updated.nama as updated_by_nama', // Select the updated user's name or any other details you need
+                    'mu_updated.id as updated_by_id'
+                ]);
+
+        }
+
+        //User Pusat
+        if($provinsi_id == null && $kabupaten_kota_id == null){
+            $query = DB::table('matchapro_alokasi_profiling as map')
+            ->join('matchapro_temporary_update_profiling as mtup', function ($join) {
+                $join->on('map.id', '=', 'mtup.alokasi_profiling_id')
+                    ->whereRaw('mtup.updated_at = (SELECT MAX(mtup_inner.updated_at) FROM matchapro_temporary_update_profiling as mtup_inner WHERE mtup_inner.alokasi_profiling_id = map.id)');
+            })
+            ->join('area_provinsi as ap', function ($join) use ($snapshot_id) {
+                $join->on('ap.id', '=', 'mtup.provinsi_id')
+                    ->where('ap.snapshot_id', '=', $snapshot_id);
+            })
+            ->join('area_kabupaten_kota as akk', 'akk.id', '=', 'mtup.kabupaten_kota_id')
+            ->leftJoin('area_kecamatan as ak', 'ak.id', '=', 'mtup.kecamatan_id')
+            ->leftJoin('area_kelurahan_desa as akd', 'akd.id', '=', 'mtup.kelurahan_desa_id')
+            ->join('matchapro_users as mu', 'mu.id', '=', 'map.user_id')
+            ->leftJoin('matchapro_users as mu_updated', 'mu_updated.id', '=', 'mtup.updated_by') // New join
+            ->where('map.periode_id', $periode_id)
+            ->select([
+                'map.id', 
+                'map.perusahaan_id as perusahaan_id',
+                'map.idsbr as kode', 
+                'mtup.nama_usaha as nama', 
+                'mtup.alamat', 
+                'mtup.provinsi_id',
+                'ap.kode as provinsi_kode',
+                'ap.nama as provinsi_nama',
+                'mtup.kabupaten_kota_id', 
+                'akk.kode as kabupaten_kota_kode',
+                'akk.nama as kabupaten_kota_nama',
+                'mtup.kecamatan_id', 
+                'ak.kode as kecamatan_kode',
+                'ak.nama as kecamatan_nama',
+                'mtup.kelurahan_desa_id',
+                'akd.kode as kelurahan_desa_kode',
+                'akd.nama as kelurahan_desa_nama',
+                'map.action_type',
+                'map.status_form',
+                'map.updated_at',
+                'mu_updated.nama as updated_by_nama', // Select the updated user's name or any other details you need
+                'mu_updated.id as updated_by_id'
+            ]);
+
+        }
+        
 
                         
 
