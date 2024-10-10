@@ -21,6 +21,6 @@
     "resolve-url-loader": "^4.0.0",
     "rtlcss": "^2.4.0",
     "sass": "1.30.0",
-    "sass-loader": "^11.0.1"
+    "sass-loader": "^11.0.1"    
   }
 }

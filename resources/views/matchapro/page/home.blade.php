@@ -11,8 +11,14 @@
             </h2>
         </div>
         <div class="card-body">
-            <div class="card-text">
-
+            <div class="card-text">                
+                <p>                    
+                    MatchaPro adalah Matching Assessment Profiling blablabla {{ Route::currentRouteName() }}
+                    {{-- Getting start with your project custom requirements using a ready template which is quite difficult and
+                    time
+                    taking process, Vuexy Admin provides useful features to kick start your project development with no
+                    efforts ! --}}
+                </p>
                 <ul>
                     <li>
                         MatchaPro, atau Matching Assessment Profiling, adalah aplikasi yang dirancang untuk melakukan

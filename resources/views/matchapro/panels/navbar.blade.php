@@ -94,9 +94,13 @@
                 <div class="user-nav d-sm-flex d-none">
                     <span class="user-name fw-bolder">
                         @if (Auth::check())
-                            {{ Auth::user()->nama }}
+                            @if(session('userSSO'))
+                                {{ session('userSSO')->getName() }}
+                            @else
+                                {{ Auth::user()->nama }}
+                            @endif
                         @else
-                            No Name
+                            User MatchaPro
                         @endif
                     </span>
                     <span class="user-status">
@@ -113,9 +117,15 @@
                     </span>
                 </div>
                 <span class="avatar">
-                    <img class="round" {{-- src="{{ Auth::user() ? Auth::user()->profile_photo_url : asset('images/portrait/small/avatar-s-11.jpg') }}" --}} {{-- src="{{ asset('images/portrait/small/avatar-s-11.jpg') }}" --}}
+                    @if(session('userSSO'))                    
+                    <img class="round" 
+                        src="{{ session('userSSO')->getUrlFoto() }}" alt="avatar" height="40" width="40">
+                    <span class="avatar-status-online"></span>
+                    @else
+                    <img class="round" 
                         src="{{ asset('images/logo/logoFRS.png') }}" alt="avatar" height="40" width="40">
                     <span class="avatar-status-online"></span>
+                    @endif
                 </span>
             </a>
             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
