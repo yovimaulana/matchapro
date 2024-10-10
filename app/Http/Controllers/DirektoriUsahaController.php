@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Facades\Crypt;
+use Box\Spout\Writer\Common\Creator\WriterEntityFactory;
+use Box\Spout\Common\Entity\Row;
+use Rap2hpoutre\FastExcel\FastExcel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DirektoriUsahaController extends Controller
 {
@@ -293,6 +297,91 @@ class DirektoriUsahaController extends Controller
         $perusahaan['edit_link'] = route('form_update_usaha2.index', Crypt::encrypt($perusahaan_id));
 
         return response()->json($perusahaan);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $filename = 'direktori_usaha_' . date('Y-m-d_His') . '.xlsx';
+
+        return (new FastExcel($this->exportData($request)))
+        ->download($filename);
+    }
+
+    private function exportData($request)
+    {
+        // Query your data in chunks to avoid memory issues
+        $query = DB::table('business_perusahaan as bp')
+            ->leftJoin('area_provinsi as ap', 'ap.id', '=', 'bp.provinsi_id')
+            ->leftJoin('area_kabupaten_kota as akk', 'akk.id', '=', 'bp.kabupaten_kota_id')
+            ->leftJoin('area_kecamatan as ak', 'ak.id', '=', 'bp.kecamatan_id')
+            ->leftJoin('area_kelurahan_desa as akd', 'akd.id', '=', 'bp.kelurahan_desa_id')
+            ->leftJoin('business_ref_status_perusahaan as brsp', 'brsp.id', '=', 'bp.status_perusahaan_id')
+            ->select(
+                'bp.kode as idsbr',
+                'bp.nama as nama_usaha',
+                'bp.alamat as alamat_usaha',
+                DB::raw("CONCAT(ap.kode, akk.kode, ak.kode, akd.kode) as kode_wilayah"),
+                'brsp.nama as status_perusahaan'
+            );
+
+        // Apply filters based on $request
+        if ($request->filled('provinsi')) {
+            $query->where('bp.provinsi_id', $request->provinsi);
+        }
+        
+        if($request->filled('kabupaten')) {
+            $query->where('bp.kabupaten_kota_id', $request->kabupaten);
+        }
+
+        if($request->filled('kecamatan')) {
+            $query->where('bp.kecamatan_id', $request->kecamatan);
+        }
+
+        if($request->filled('desa')) {
+            $query->where('bp.kelurahan_desa_id', $request->desa);
+        }
+
+
+        // Handle the status_usaha array
+        if($request->filled('status_usaha')) {
+            $statusUsaha = $request->status_usaha;
+            if (is_array($statusUsaha) && !empty($statusUsaha)) {
+                $query->where(function($q) use ($statusUsaha) {
+                    foreach ($statusUsaha as $status) {
+                        if ($status === '') {
+                            $q->orWhereNull('bp.status_perusahaan_id');
+                        } else {
+                            $q->orWhere('bp.status_perusahaan_id', $status);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Process the data in chunks
+        $query->orderBy('bp.id');
+
+        return $this->generateRows($query);
+    }
+
+    private function generateRows($query)
+    {
+        // Yield the header row
+        yield [
+            'IDSBR', 'Nama Usaha', 'Alamat', 'Kode Wilayah', 'Status Perusahaan'
+            // Add more columns as needed
+        ];
+
+        foreach ($query->cursor() as $record) {
+            yield [
+                $record->idsbr,
+                $record->nama_usaha,
+                $record->alamat_usaha,
+                $record->kode_wilayah,
+                $record->status_perusahaan,
+                // Add more fields as needed
+            ];
+        }
     }
 
     /**

@@ -15,6 +15,7 @@
     "irsadarief/jkd-sso": "^1.6",
     "laravel/framework": "^8.40",
     "laravel/tinker": "^2.5",
+    "rap2hpoutre/fast-excel": "^5.5",
     "spatie/laravel-permission": "^6.9"
   },
   "require-dev": {

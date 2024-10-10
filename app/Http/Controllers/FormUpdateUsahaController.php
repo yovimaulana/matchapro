@@ -467,9 +467,9 @@ class FormUpdateUsahaController extends Controller
                 ], 400);            
             }                        
 
-            // cek status form nya ['OPEN', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']
+            // cek status form nya ['OPEN', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELED']
             $status_form = $request->input('status_form') ?? null;
-            $allowed_status_form = ['OPEN', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];
+            $allowed_status_form = ['OPEN', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELED'];
             if(!$status_form || !in_array($status_form, $allowed_status_form)) {
                 return response()->json([
                     'status' => 'error',
@@ -521,9 +521,9 @@ class FormUpdateUsahaController extends Controller
             // upcoming status APPROVED, REJECTED
             // yang bisa approved dan rejected hanya role ADMIN
             $role_user = auth()->user()->getRoleNames()[0]; // PUSAT-ADMIN, dst
+            $canApprove = auth()->user()->getPermissionsViaRoles()->contains('name','approval-usaha-profiling-user');
             if(in_array($status_form, ['APPROVED', 'REJECTED']) && 
-                !in_array($role_user, ['PUSAT-ADMIN', 'PUSAT-ADMIN-PROFILER']) // harus diganti pake permission
-            ) {
+                !$canApprove) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User tidak memiliki hak akses untuk melakukan profiling pada data ini!'
@@ -689,7 +689,8 @@ class FormUpdateUsahaController extends Controller
                 'DRAFT' => 'Berhasil menyimpan draft data!',
                 'SUBMITTED' => 'Berhasil submit data final!',
                 'APPROVED' => 'Berhasil melakukan approval data: APPROVED!',
-                'REJECTED' => 'Berhasil melakukan approval data: REJECTED!'
+                'REJECTED' => 'Berhasil melakukan approval data: REJECTED!',
+                'CANCELED' => 'Berhasil membatalkan submit data!'
             ]; 
             $result = [
                 'status' => 'success',

@@ -31,6 +31,7 @@ Route::post('login', [AuthController::class, 'login'])->name('login.post');
 
 
 Route::middleware(['sso-bps'])->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('home', [HomeController::class, 'index'])->name('home');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -47,6 +48,7 @@ Route::middleware(['sso-bps'])->group(function () {
     Route::get('direktori-usaha', [DirektoriUsahaController::class, 'index'])->name('direktori_usaha.index');
     Route::get('direktori-usaha/data', [DirektoriUsahaController::class, 'getDirektoriUsahaData'])->name('direktori_usaha.data');
     Route::post('direktori-usaha/data-by-id', [DirektoriUsahaController::class, 'getDirektoriUsahaDataById'])->name('direktori_usaha.data_by_id');
+    Route::get('direktori-usaha/export', [DirektoriUsahaController::class, 'exportExcel'])->name('export.excel');
 
     //Profiling
     Route::get('profiling', [ProfilingController::class, 'index'])->name('profiling.index');

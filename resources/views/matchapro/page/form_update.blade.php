@@ -236,7 +236,7 @@
                         <div class="mb-6">
                             <label class="form-label" for="kegiatan_utama">Kegiatan Utama Usaha/Perusahaan <span
                                     class="text-danger">*</span></label>
-                            <input type="text" class="form-control uppercase-text" id="kegiatan_utama"
+                            <input value="{{ $usaha->kegiatan_utama }}" type="text" class="form-control uppercase-text" id="kegiatan_utama"
                                 placeholder="Kegiatan Utama Usaha/Perusahaan" name="kegiatan_utama"
                                 aria-label="Kegiatan Utama Usaha/Perusahaan">
                             <div class="invalid-feedback"><span id="kegiatan_utama_error"></span></div>
@@ -685,8 +685,7 @@
                     '_token': '{{ csrf_token() }}',
                     'level': 'user'
                 },
-                success: function (response) {
-                    console.log(response)
+                success: function (response) {                    
                     let wilKab = [{
                         id: '',
                         text: '-- Pilih Kabupaten/Kota --'
@@ -702,9 +701,7 @@
                     kabupatenCache.push({
                         provinsi: provinsi,
                         kabupaten_kota: wilKab
-                    })
-
-                    console.log(kabupatenCache)
+                    })                    
 
                     setOption($('#kabupaten_kota'), wilKab);
                     setOption($('#kecamatan'), [{
@@ -910,10 +907,6 @@
             $("#container-idsbr-duplikat").hide();
             $("#container-aktif-pindah").hide();
 
-            // hide form pilih kabkot
-            // hide form input memasukan idsbr master
-
-
         })
 
         $("#button-check-idsbr").on('click', function () {
@@ -1000,9 +993,7 @@
             idsbrTemporary = {};
         });
 
-        $("#backdrop").on('hidden.bs.modal', function () {
-            console.log(idsbrAccept);
-            console.log(closeTrigger);
+        $("#backdrop").on('hidden.bs.modal', function () {            
             if (closeTrigger == 'accept') {
                 $("#idsbr-confirm").html(idsbrAccept.idsbr);
                 $("#nama-confirm").html(idsbrAccept.nama);
@@ -1124,15 +1115,10 @@
         $("#save-draft").on('click', function () {
             initializeFormOutput();
             validateForm();
-            showErrorMessages();
-            // let numError = calculateError();
-            // if (numError) return;
-
-            consistencyCheck();
-            showConsistencyCheck();
+            showErrorMessages();                        
 
             // save draft
-            // sendData('DRAFT');
+            sendData('DRAFT');
         });
 
         function showErrorMessages() {
@@ -1147,12 +1133,20 @@
         $("#submit-final").on('click', function () {
             initializeFormOutput();
             validateForm();
-            let numError = calculateError();
+            showErrorMessages();
+            let numError = calculateError();            
             if (numError) return;
 
-            consistencyCheck();
-            showConsistencyCheck();
+            let numConsistency = consistencyCheck();
+            if(numConsistency) {
+                showConsistencyCheck();
+                return;
+            }            
 
+            confirmSubmitData();
+        });
+
+        function confirmSubmitData() {
             Swal.fire({
                 title: 'Konfirmasi!',
                 text: 'Setelah data disubmit, anda tidak dapat mengedit data ini!',
@@ -1170,11 +1164,10 @@
                     sendData('SUBMITTED');
                 }
             })
-        });
+        }
 
         function showConsistencyCheck() {
-            let keyConsistencyCheck = Object.keys(listConsistencyCheck);
-            console.log(keyConsistencyCheck);
+            let keyConsistencyCheck = Object.keys(listConsistencyCheck);            
             if (keyConsistencyCheck.length) {
                 // show modal with listConsistencyCheck
                 // Create modal content
@@ -1193,7 +1186,7 @@
                 modalContent += '</ul></div>' +
                     '<div class="modal-footer">' +
                     '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' +
-                    '<button type="button" class="btn btn-primary" id="confirm-consistency">Confirm</button>' +
+                    '<button type="button" class="btn btn-primary" id="confirm-consistency">Ignore</button>' +
                     '</div>';
 
                 // Set the modal content
@@ -1202,7 +1195,7 @@
                 // Add event listener for the confirm button
                 $('#confirm-consistency').on('click', function() {
                     $('#consistency-check-modal').modal('hide');
-                    sendData('SUBMITTED');
+                    confirmSubmitData();
                 });
                 $("#consistency-check-modal").modal('show');
             }
@@ -1251,8 +1244,13 @@
                         buttonsStyling: false
                     });
 
-                    if (['OPEN', 'DRAFT'].includes(response.status_form)) {
-                        // show success message and allow user to continue edit data                        
+                    if (['OPEN', 'DRAFT', 'CANCELED'].includes(response.status_form)) {
+                        // show success message and allow user to continue edit data  
+                        $("#save-draft").show();
+                        $("#submit-final").show();
+                        $("#approve-update").hide();
+                        $("#reject-update").hide();
+                        $("#cancel-submit-final").hide();
                         return;
                     }
 
@@ -1306,8 +1304,7 @@
 
                 },
                 error: function (err) {
-                    unblockProgress('body');
-                    console.log(err)
+                    unblockProgress('body');                    
                     let errorMessage = 'An unexpected error occurred';
                     if (err.responseJSON && err.responseJSON.message) {
                         errorMessage = err.responseJSON.message;
@@ -1331,18 +1328,29 @@
             if(outputForm.badan_usaha == '1') {                
                 if(!outputForm.nama.toLowerCase().includes('pt')) {                    
                     listConsistencyCheck['nama_usaha'] = 'Badan Hukum = PT Tetapi nama perusahaan tidak mengandung PT';
+                } else {
+                    delete listConsistencyCheck.nama_usaha;
                 }
+            } else {
+                delete listConsistencyCheck.nama_usaha;
             }
 
             // 2. check if nama contain 'PT' but badan usaha != PT            
             if(outputForm.nama.toLowerCase().includes('pt') && outputForm.badan_usaha != '1') {
                 listConsistencyCheck['badan_usaha'] = 'Badan Hukum tidak PT Tetapi nama perusahaan mengandung PT';
+            } else {
+                delete listConsistencyCheck.badan_usaha;
             }
 
             // 3. check if kbli kantor pusat (70100) tetapi jaringan usaha <> 2 (kantor pusat)            
             if(outputForm.kbli == '70100' && outputForm.jaringan_usaha != '2') {
                 listConsistencyCheck['kbli'] = 'KBLI kantor pusat (70100) tetapi jaringan usaha tidak kantor pusat';
-            }            
+            } else {
+                delete listConsistencyCheck.kbli;
+            }   
+            
+            let consistencyCheckKeys = Object.keys(listConsistencyCheck);
+            return consistencyCheckKeys.length;
             
         }
 
@@ -1498,8 +1506,7 @@
 
                 // if duplicate terpilih
                 if (outputForm.status_perusahaan == '9') {
-                    // if belum ada idsbr master yang dikonfimasi
-                    console.log(outputForm.idsbr_master)
+                    // if belum ada idsbr master yang dikonfimasi                    
                     if (!outputForm.idsbr_master) {
                         $(".hidden-input-only-duplikat").addClass('is-invalid');
                         listError['idsbr_master'] = 'idsbr master belum terkonfirmasi';
@@ -1599,6 +1606,23 @@
 
 
         }
+
+        $("#cancel-submit-final").on('click', function() {
+            Swal.fire({
+                title: 'Konfirmasi',
+                text: 'Apakah anda yakin ingin membatalkan submit?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545', // Bootstrap 'danger' red color
+                cancelButtonColor: '#d3d3d3',
+                confirmButtonText: 'Ya, batalkan!',
+                cancelButtonText: 'Close'
+            }).then((result) => {
+                if (result.isConfirmed) {                    
+                    sendData('CANCELED');
+                }
+            });
+        });
 
         function validateEmail(email) {
             // Regular expression for validating an email address

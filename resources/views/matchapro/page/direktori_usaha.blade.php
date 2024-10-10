@@ -226,14 +226,15 @@
         <form id="downloadForm">
           <!-- Wilayah Filters -->
           <div class="mb-1">
-            <label for="provinsi" class="form-label">Provinsi</label>
+            <label for="provinsi" class="form-label">Provinsi <span class="text-danger">*</span></label>
             <select class="form-select select2" id="provinsi" name="provinsi">
               <option value="">Pilih Provinsi</option>
+              <option value="106">Aceh</option>
               <!-- Add options dynamically -->
             </select>
           </div>
           <div class="mb-1">
-            <label for="kabupaten" class="form-label">Kabupaten</label>
+            <label for="kabupaten" class="form-label">Kabupaten <span class="text-danger">*</span></label>
             <select class="form-select select2" id="kabupaten" name="kabupaten">
               <option value="">Pilih Kabupaten</option>
               <!-- Add options dynamically -->
@@ -256,7 +257,7 @@
 
           <!-- Status Usaha Filter -->
           <div class="mb-3">
-            <label for="status_usaha" class="form-label">Status Usaha</label>
+            <label for="status_usaha" class="form-label">Status Usaha <span class="text-danger">*</span></label>
             <select class="form-select select2" id="status_usaha" name="status_usaha[]" multiple>
               <option value="1">Aktif</option>
               <option value="2">Tutup Sementara</option>
@@ -267,15 +268,14 @@
               <option value="7">Aktif Pindah</option>
               <option value="8">Aktif Non Response</option>
               <option value="9">Duplikat</option>
-              <!-- Add more status options as needed -->
+              <option value="">Undefined</option>              
             </select>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="downloadExcel">Download Excel</button>
-        <button type="button" class="btn btn-primary" id="downloadCSV">Download CSV</button>
+        <button type="button" class="btn btn-primary" id="downloadExcel">Download</button>        
       </div>
     </div>
   </div>
@@ -540,11 +540,290 @@
             }
 
             $('#export-excel').on('click', function() {
-                $("#downloadModal").modal('show');
+                $("#downloadModal").modal('show');                          
             });
 
+            let provinsiCache = [];
+            $("#downloadModal").on('shown.bs.modal', function(e) {
+                if(!provinsiCache.length) {
+                    getWilayahProvinsi();                    
+                    return;
+                }
+                setOption($('#provinsi'), provinsiCache);                
+            });            
+
+            function getWilayahProvinsi() {
+                blockProgress($(".modal-body"));
+                $.ajax({
+                    url: "{{ route('master-provinsi.data') }}",
+                    type: 'GET',
+                    success: function(data) {
+                        let provUser = "{{ auth()->user()->provinsi_id }}";
+                        let levelUser = "{{ auth()->user()->getRoleNames()[0] }}";                        
+                        let wilProv = [{
+                            id: '',
+                            text: '-- Pilih Provinsi --'
+                        }]
+                        for(let i = 0; i < data.length; i++) {
+                            if(levelUser.split('-')[0] == 'PUSAT' || data[i].id == provUser) {
+                                wilProv.push({
+                                    id: data[i].id,
+                                    text: '[' + data[i].kode + '] ' + data[i].nama
+                                });
+                            }                                                      
+                        }
+                        provinsiCache = wilProv;     
+                        setOption($('#provinsi'), provinsiCache);                    
+                        unblockProgress($(".modal-body"));
+                    },
+                    error: function(xhr) {
+                        unblockProgress($(".modal-body"));
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Something went wrong. Try again later!',
+                            icon: 'error',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                });
+            }
+
+            let kabupatenCache = [];
+            $('#provinsi').on('change', function() {
+                let provinsi = $(this).val();                
+                if(!provinsi) {
+                    setOption($('#kabupaten'), [{
+                        id: '',
+                        text: '-- Pilih Kabupaten/Kota --'
+                    }]);                                       
+                    return;
+                }
+
+                let findCache = kabupatenCache.find(kc => kc.provinsi == provinsi);
+                if(findCache) {
+                    setOption($('#kabupaten'), findCache.kabupaten_kota);                    
+                    unblockProgress($(".modal-body"));
+                    return;
+                }
+
+                getWilayahKabupatenKota(provinsi);
+            });
+            
+            function getWilayahKabupatenKota(provinsi) {
+                blockProgress($(".modal-body"));
+                $.ajax({
+                    url: "{{ route('wil-kabupaten-kota') }}",
+                    type: 'POST',
+                    data: {
+                        provinsi: provinsi,
+                        _token: '{{ csrf_token() }}',
+                        level: 'user'
+                    },
+                    success: function(response) {
+                        let wilKab = [{
+                            id: '',
+                            text: '-- Pilih Kabupaten/Kota --'
+                        }]
+                        for (let i = 0; i < response.length; i++) {
+                            wilKab.push({
+                                id: response[i].id,
+                                text: '[' + response[i].kode + ']' + ' ' + response[i]
+                                    .nama
+                            })
+                        }
+                        kabupatenCache.push({
+                            provinsi: provinsi,
+                            kabupaten_kota: wilKab
+                        }) 
+                        setOption($('#kabupaten'), wilKab);
+                        setOption($('#kecamatan'), [{
+                            id: '',
+                            text: '-- Pilih Kecamatan --'
+                        }]);
+                        setOption($("#desa"), [{
+                            id: '',
+                            text: '-- Pilih Kelurahan/Desa --'
+                        }]);
+                        unblockProgress($(".modal-body"));
+                    },
+                    error: function(xhr) {
+                        unblockProgress($(".modal-body"));
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Something went wrong. Try again later!',
+                            icon: 'error',
+                        })
+                    }
+                })
+            }
+
+            let kecamatanCache = [];
+            $("#kabupaten").on('change', function() {
+                let kabupaten = $(this).val();
+                if(!kabupaten) {
+                    setOption($('#kecamatan'), [{
+                        id: '',
+                        text: '-- Pilih Kecamatan --'
+                    }]);                    
+                    return;
+                }
+
+                let findCache = kecamatanCache.find(kc => kc.kabupaten_kota == kabupaten);
+                if(findCache) {
+                    setOption($('#kecamatan'), findCache.kecamatan);                    
+                    unblockProgress($(".modal-body"));
+                    return;
+                }
+
+                getWilayahKecamatan(kabupaten);
+            });
+
+            function getWilayahKecamatan(kabupaten) {
+                blockProgress($(".modal-body"));
+                $.ajax({
+                    url: "{{ route('wil-kecamatan') }}",
+                    type: 'POST',
+                    data: {
+                        kabupaten_kota: kabupaten,
+                        _token: '{{ csrf_token() }}',                        
+                    },
+                    success: function(response) {
+                        let wilKec = [{
+                            id: '',
+                            text: '-- Pilih Kecamatan --'
+                        }]
+                        for (let i = 0; i < response.length; i++) {
+                            wilKec.push({
+                                id: response[i].id,
+                                text: '[' + response[i].kode + ']' + ' ' + response[i]
+                                    .nama
+                            })
+                        }
+                        kecamatanCache.push({
+                            kabupaten_kota: kabupaten,
+                            kecamatan: wilKec
+                        }) 
+                        setOption($('#kecamatan'), wilKec);                        
+                        unblockProgress($(".modal-body"));
+                    },
+                    error: function(xhr) {
+                        unblockProgress($(".modal-body"));
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Something went wrong. Try again later!',
+                            icon: 'error',
+                        })
+                    }
+                })
+            }
+
+            let desaCache = [];
+            $("#kecamatan").on('change', function() {
+                let kecamatan = $(this).val();
+                if(!kecamatan) {
+                    setOption($("#desa"), [{
+                        id: '',
+                        text: '-- Pilih Kelurahan/Desa --'
+                    }]);
+                    return;
+                }
+
+                let findCache = desaCache.find(dc => dc.kecamatan == kecamatan);
+                if(findCache) {
+                    setOption($("#desa"), findCache.desa);
+                    unblockProgress($(".modal-body"));
+                    return;
+                }   
+
+                getWilayahDesa(kecamatan);
+            });
+
+            function getWilayahDesa(kecamatan) {
+                blockProgress($(".modal-body"));
+                $.ajax({
+                    url: "{{ route('wil-desa') }}",
+                    type: 'POST',
+                    data: {
+                        kecamatan: kecamatan,
+                        _token: '{{ csrf_token() }}',
+                    },
+                    success: function(response) {
+                        let wilDesa = [{
+                            id: '',
+                            text: '-- Pilih Kelurahan/Desa --'
+                        }];
+
+                        for (let i = 0; i < response.length; i++) {
+                            wilDesa.push({
+                                id: response[i].id,
+                                text: '[' + response[i].kode + ']' + ' ' + response[i]
+                                    .nama
+                            });
+                        }
+
+                        desaCache.push({
+                            kecamatan: kecamatan,
+                            desa: wilDesa
+                        });
+
+                        setOption($("#desa"), wilDesa);
+                        unblockProgress($(".modal-body"));
+                    },
+                    error: function(xhr) {
+                        unblockProgress($(".modal-body"));
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Something went wrong. Try again later!',
+                            icon: 'error',
+                        })
+                    }
+                })
+            }
+                                    
+            function setOption(area, data) {
+                // Clear existing options
+                area.empty();
+                // Append new options dynamically
+                let temp = []
+                $.each(data, function (index, option) {
+                    var newOption = new Option(option.text, option.id, false, false);
+                    temp.push(newOption);
+                });
+                area.append(temp).trigger('change');
+            }
+
+            $("#downloadExcel").on('click', function() {
+                let isValid = validateDownloadRequest();
+                if(!isValid) return;
+
+                var url = "{{ route('export.excel') }}";
+                var params = $('#downloadForm').serialize();                                
+                window.location.href = url + '?' + params;
+                $("#downloadModal").modal('hide');                
+            });
+
+            function validateDownloadRequest() {
+                let provinsi = $('#provinsi').val();
+                let kabupaten = $('#kabupaten').val();
+                let kecamatan = $('#kecamatan').val();
+                let desa = $('#desa').val();
+                let status_usaha = $('#status_usaha').val();                
+                if(!provinsi || !kabupaten || !status_usaha.length) {
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Field provinsi, kabupaten/kota, and status usaha is required!',
+                        icon: 'warning',
+                    })
+                    return false
+                }               
+                return true;
+            }
+
             $('#export-csv').on('click', function() {
-                alert('Export CSV');
+                alert('Currently unavailable. Try export to excel instead.');
             });
         });
     </script>
