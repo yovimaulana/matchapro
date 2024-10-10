@@ -1,7 +1,6 @@
 @extends('matchapro/layouts/contentLayoutMaster')
 
-@section('title', 'Profiling')
-
+@section('title', 'Profiling Mandiri')
 
 @section('vendor-style')
     <!-- vendor css files -->
@@ -19,349 +18,160 @@
 
 @endsection
 
-
-
 @section('content')
     <!-- Kick start -->
     <div class="card">
-        <div class="col-xl-12 col-lg-12 col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Profiling</h4>
+        <div class="card-header">
+            <h2>Daftar Profiling Mandiri</h2>
+        </div>
+        <div class="card-body">
+            <div class="card-text">
+                <div class="row">
+
+                    <div class="col-md-6 mb-1">
+                        <label class="form-label" for="select2-status_form_mandiri">Status
+                            Form</label>
+                        <select class="select2 form-select" id="select2-status_form_mandiri">
+                            <option value="">--Pilih Status Form--</option>
+                            <option value="OPEN">OPEN</option>
+                            <option value="DRAFT">DRAFT</option>
+                            <option value="SUBMITTED">SUBMITTED</option>
+                            <option value="REJECTED">REJECTED</option>
+                            <option value="APPROVED">APPROVED</option>
+                            <option value="CANCELED">CANCELED</option>
+
+                        </select>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="homeIcon-tab" data-bs-toggle="tab" href="#homeIcon"
-                                aria-controls="home" role="tab" aria-selected="true"><i data-feather="file-text"></i>
-                                Profiling Periodik</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="profileIcon-tab" data-bs-toggle="tab" href="#profileIcon"
-                                aria-controls="profile" role="tab" aria-selected="false"><i data-feather="file"></i>
-                                Profiling Mandiri</a>
-                        </li>
 
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="homeIcon" aria-labelledby="homeIcon-tab" role="tabpanel">
-                            <div class="card-body">
-                                <div class="card-text">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-1">
-                                            <label class="form-label" for="select2-periode">Periode Profiling</label>
-                                            <select class="select2 form-select" id="select2-periode">
-
-                                                @foreach ($periode_profiling as $periode)
-                                                    <option value="{{ $periode->id }}"
-                                                        data-is_active="{{ $periode->is_active }}"
-                                                        data-start_date="{{ $periode->start_date }}"
-                                                        data-end_date="{{ $periode->end_date }}">
-                                                        {{ $periode->nama_kegiatan }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-1">
-                                            <label class="form-label" for="select2-status_form">Status Form</label>
-                                            <select class="select2 form-select" id="select2-status_form">
-                                                <option value="">--Pilih Status Form--</option>
-                                                <option value="OPEN">OPEN</option>
-                                                <option value="DRAFT">DRAFT</option>
-                                                <option value="SUBMITTED">SUBMITTED</option>
-                                                <option value="REJECTED">REJECTED</option>
-                                                <option value="APPROVED">APPROVED</option>
-                                                <option value="CANCELED">CANCELED</option>
-
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="row mt-2">
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-warning p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="file" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder open-count">0</h2>
-                                                    <p class="card-text">Open</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-warning p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="file-text" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder draft-count">0</h2>
-                                                    <p class="card-text">Draft</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-success p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="send" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder submitted-count">0</h2>
-                                                    <p class="card-text">Submitted</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-success p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="check" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder approved-count">0</h2>
-                                                    <p class="card-text">Approved</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-danger p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="x" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder rejected-count">0</h2>
-                                                    <p class="card-text">Rejected</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {{-- <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-danger p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="trash-2" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder canceled-count">0</h2>
-                                                    <p class="card-text">Canceled</p>
-                                                </div>
-                                            </div>
-                                        </div> --}}
+                <div class="row mt-2">
+                    <div class="col-xl-2 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            <div class="">
+                                <div class="avatar bg-light-warning p-50 mb-1">
+                                    <div class="avatar-content">
+                                        <i data-feather="file" class="font-medium-5"></i>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="card">
-
-                                <div id="alert-periode_berakhir"></div>
-
-
-                                <div class="card-header">
-                                    <h4 class="card-title">Data Alokasi Profiling</h4>
-                                </div>
-                                <div class="card-body">
-                                    {{-- Load Data --}}
-                                    <div class="card-datatable">
-                                        <table id="data_profiling" class="dt-responsive table " style="width: 100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Kode</th>
-                                                    <th>Nama</th>
-                                                    <th>Alamat</th>
-                                                    <th>Wilayah</th>
-                                                    <th>Status</th>
-                                                    <th>Updated At</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tfoot>
-                                                <tr>
-                                                    <th>Kode</th>
-                                                    <th>Nama</th>
-                                                    <th>Alamat</th>
-                                                    {{-- <th>Provinsi</th>
-                                                    <th>Kabupaten/Kota</th>
-                                                    <th>Kecamatan</th>
-                                                    <th>Kelurahan/Desa</th> --}}
-                                                    <th>Wilayah</th>
-                                                    <th>Status</th>
-                                                    <th>Updated At</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </tfoot>
-                                            <tbody>
-                                                {{-- Load Data Here --}}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                                <h2 class="fw-bolder open-count-mandiri">0</h2>
+                                <p class="card-text">Open</p>
                             </div>
                         </div>
-                        <div class="tab-pane" id="profileIcon" aria-labelledby="profileIcon-tab" role="tabpanel">
-                            <div class="card-body">
-                                <div class="card-text">
-                                    <div class="row">
-
-                                        <div class="col-md-6 mb-1">
-                                            <label class="form-label" for="select2-status_form_mandiri">Status
-                                                Form</label>
-                                            <select class="select2 form-select" id="select2-status_form_mandiri">
-                                                <option value="">--Pilih Status Form--</option>
-                                                <option value="OPEN">OPEN</option>
-                                                <option value="DRAFT">DRAFT</option>
-                                                <option value="SUBMITTED">SUBMITTED</option>
-                                                <option value="REJECTED">REJECTED</option>
-                                                <option value="APPROVED">APPROVED</option>
-                                                <option value="CANCELED">CANCELED</option>
-
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="row mt-2">
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-warning p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="file" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder open-count-mandiri">0</h2>
-                                                    <p class="card-text">Open</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-warning p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="file-text" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder draft-count-mandiri">0</h2>
-                                                    <p class="card-text">Draft</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-success p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="send" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder submitted-count-mandiri">0</h2>
-                                                    <p class="card-text">Submitted</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-success p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="check" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder approved-count-mandiri">0</h2>
-                                                    <p class="card-text">Approved</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-danger p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="x" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder rejected-count-mandiri">0</h2>
-                                                    <p class="card-text">Rejected</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-md-4 col-sm-6">
-                                            <div class="card text-center">
-                                                <div class="">
-                                                    <div class="avatar bg-light-danger p-50 mb-1">
-                                                        <div class="avatar-content">
-                                                            <i data-feather="trash-2" class="font-medium-5"></i>
-                                                        </div>
-                                                    </div>
-                                                    <h2 class="fw-bolder canceled-count-mandiri">0</h2>
-                                                    <p class="card-text">Canceled</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            <div class="">
+                                <div class="avatar bg-light-warning p-50 mb-1">
+                                    <div class="avatar-content">
+                                        <i data-feather="file-text" class="font-medium-5"></i>
                                     </div>
                                 </div>
+                                <h2 class="fw-bolder draft-count-mandiri">0</h2>
+                                <p class="card-text">Draft</p>
                             </div>
-                            <div class="card">
-                                <div class="card-header">
-                                    <h4 class="card-title">Data Profiling Mandiri</h4>
-                                </div>
-                                <div class="card-body">
-                                    {{-- Load Data --}}
-                                    <div class="card-datatable">
-                                        <table id="data_profiling_mandiri" class="dt-responsive table "
-                                            style="width: 100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Kode</th>
-                                                    <th>Nama</th>
-                                                    <th>Alamat</th>
-                                                    <th>Wilayah</th>
-                                                    <th>Status</th>
-                                                    <th>Updated At</th>
-                                                    <th>Updated By</th>
-                                                    <th>Tipe Update</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tfoot>
-                                                <tr>
-                                                    <th>Kode</th>
-                                                    <th>Nama</th>
-                                                    <th>Alamat</th>
-                                                    <th>Wilayah</th>
-                                                    <th>Status</th>
-                                                    <th>Updated At</th>
-                                                    <th>Updated By</th>
-                                                    <th>Tipe Update</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </tfoot>
-                                            <tbody>
-                                                {{-- Load Data Here --}}
-                                            </tbody>
-                                        </table>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            <div class="">
+                                <div class="avatar bg-light-success p-50 mb-1">
+                                    <div class="avatar-content">
+                                        <i data-feather="send" class="font-medium-5"></i>
                                     </div>
                                 </div>
+                                <h2 class="fw-bolder submitted-count-mandiri">0</h2>
+                                <p class="card-text">Submitted</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            <div class="">
+                                <div class="avatar bg-light-success p-50 mb-1">
+                                    <div class="avatar-content">
+                                        <i data-feather="check" class="font-medium-5"></i>
+                                    </div>
+                                </div>
+                                <h2 class="fw-bolder approved-count-mandiri">0</h2>
+                                <p class="card-text">Approved</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            <div class="">
+                                <div class="avatar bg-light-danger p-50 mb-1">
+                                    <div class="avatar-content">
+                                        <i data-feather="x" class="font-medium-5"></i>
+                                    </div>
+                                </div>
+                                <h2 class="fw-bolder rejected-count-mandiri">0</h2>
+                                <p class="card-text">Rejected</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            <div class="">
+                                <div class="avatar bg-light-danger p-50 mb-1">
+                                    <div class="avatar-content">
+                                        <i data-feather="trash-2" class="font-medium-5"></i>
+                                    </div>
+                                </div>
+                                <h2 class="fw-bolder canceled-count-mandiri">0</h2>
+                                <p class="card-text">Canceled</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Data Profiling Mandiri</h4>
+            </div>
+            <div class="card-body">
+                {{-- Load Data --}}
+                <div class="card-datatable">
+                    <table id="data_profiling_mandiri" class="dt-responsive table " style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama</th>
+                                <th>Alamat</th>
+                                <th>Wilayah</th>
+                                <th>Status</th>
+                                <th>Updated At</th>
+                                <th>Updated By</th>
+                                <th>Tipe Update</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama</th>
+                                <th>Alamat</th>
+                                <th>Wilayah</th>
+                                <th>Status</th>
+                                <th>Updated At</th>
+                                <th>Updated By</th>
+                                <th>Tipe Update</th>
+                                <th>Action</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {{-- Load Data Here --}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
     <!--/ Kick start -->
 
-    <!-- Modal View -->
-    <div class="modal fade text-start" id="backdrop" tabindex="-1" aria-labelledby="myModalLabel4"
-        data-bs-backdrop="true" aria-hidden="true">
+    <div class="modal fade text-start" id="backdrop" tabindex="-1" aria-labelledby="myModalLabel4" data-bs-backdrop="true"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen">
             <div class="modal-content">
                 <div class="modal-header">
@@ -597,9 +407,8 @@
             </div>
         </div>
     </div>
-
-    <!--/ Modal View -->
 @endsection
+
 @section('vendor-script')
     <!-- vendor files -->
     {{-- <script src="{{ asset(mix('js/scripts/components/components-tooltips.js')) }}"></script> --}}
@@ -612,6 +421,7 @@
     <script src="{{ asset(mix('vendors/js/extensions/sweetalert2.all.min.js')) }}"></script>
     <script src="{{ asset(mix('vendors/js/extensions/polyfill.min.js')) }}"></script>
 @endsection
+
 @section('page-script')
     <script src="{{ asset(mix('js/scripts/forms/form-select2.js')) }}"></script>
     <script>
@@ -621,126 +431,6 @@
                 "{{ route('form_update_usaha.index', ['perusahaan_id' => ':perusahaan_id', 'alokasi_id' => ':alokasi_id']) }}";
             let cancelUpdateUsahaRoute =
                 "{{ route('form_update_usaha.cancel', ['perusahaan_id' => ':perusahaan_id', 'alokasi_id' => ':alokasi_id']) }}";
-
-            var table = $('#data_profiling').DataTable({
-                language: {
-                    emptyTable: "Tidak ada Data yang tersedia"
-                },
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "{{ route('profiling.getData') }}",
-                    data: function(d) {
-                        d.periode_id = $('#select2-periode').val();
-                        d.status_form = $('#select2-status_form').val();
-                    },
-                    dataSrc: function(json) {
-                        // Update HTML with the count of each status
-                        updateStatusCounts(json.countGroup, 'periodik');
-                        return json.data;
-                    }
-
-                },
-                // language: {
-                //     processing: '<div class="d-flex justify-content-center align-items-center"><p class="me-50 mb-0">Mohon Menunggu...</p></div> <div class="spinner-border text-primary" role="status">',
-                // },
-                columns: [{
-                        data: 'kode',
-                        title: 'Kode',
-                        width: '1%'
-                    },
-                    {
-                        data: 'nama',
-                        title: 'Nama Usaha'
-                    },
-                    {
-                        data: 'alamat',
-                        title: 'Alamat'
-                    },
-                    {
-                        data: null,
-                        title: 'Wilayah',
-                        render: function(data, type, row) {
-                            // Generate buttons with actions
-                            // return `${row.provinsi_nama}-${row.kabupaten_kota_nama}-${row.kecamatan_nama}-${row.kelurahan_desa_nama} `;
-                            return `${row.provinsi_kode}-${row.kabupaten_kota_kode}${row.kecamatan_kode ? '-'+row.kecamatan_kode : ''}${row.kelurahan_desa_kode ? '-'+row.kelurahan_desa_kode : ''} <br> <hr>
-                            ${row.provinsi_nama}-${row.kabupaten_kota_nama}${row.kecamatan_nama ? '-'+row.kecamatan_nama : ''}${row.kelurahan_desa_nama ? '-'+row.kelurahan_desa_nama : ''}
-                            `;
-                        }
-                    },
-                    {
-                        data: 'status_form',
-                        title: 'Status',
-                        render: function(data, type, row) {
-
-                            if (row.status_form == 'OPEN') {
-                                return `<span class="badge rounded-pill badge-light-warning">${row.status_form}</span>`;
-                            }
-
-                            if (row.status_form == 'DRAFT') {
-                                return `<span class="badge rounded-pill badge-light-warning">${row.status_form}</span>`;
-                            }
-
-                            if (row.status_form == 'SUBMITTED') {
-                                return `<span class="badge rounded-pill badge-light-success">${row.status_form}</span>`;
-                            }
-
-                            if (row.status_form == 'REJECTED') {
-                                return `<span class="badge rounded-pill badge-light-danger">${row.status_form}</span>`;
-                            }
-
-                            if (row.status_form == 'APPROVED') {
-                                return `<span class="badge rounded-pill badge-light-success">${row.status_form}</span>`;
-                            }
-
-                            if (row.status_form == 'CANCELED') {
-                                return `<span class="badge rounded-pill badge-light-danger">${row.status_form}</span>`;
-                            }
-                            // Generate buttons with actions
-                            // return `${row.status_form}`;
-
-                        }
-                    },
-                    {
-                        data: 'updated_at',
-                        title: 'Updated At',
-                        render: function(data, type, row) {
-                            // Generate buttons with actions
-                            return `${row.updated_at}`;
-                        }
-                    },
-                    {
-                        data: null, // This column doesn't correspond to a field in the dataset
-                        title: 'Action',
-                        orderable: false, // Disable ordering on this column
-                        searchable: false, // Disable searching on this column
-                        render: function(data, type, row) {
-                            // Replace placeholders with actual row data
-                            let editUrl = formUpdateUsahaRoute
-                                .replace(':perusahaan_id', row.perusahaan_id)
-                                .replace(':alokasi_id', row.id);
-
-                            // Generate buttons with actions
-                            return `
-                            <a href="javascript:void(0)" data-bs-toggle="modal" 
-                                data-url="{{ route('form_update_usaha.history', ['perusahaan_id' => '__PERUSAHAAN_ID__', 'alokasi_id' => '__ALOKASI_ID__']) }}" 
-                                data-perusahaan_id="${row.perusahaan_id}" data-alokasi_id="${row.id}" data-bs-target="#backdrop">
-                                <button type="button" class="btn btn-icon btn-flat-primary btn-lg" data-bs-toggle="tooltip" data-bs-placement="top" title="View History">
-                                    <i data-feather="eye" width="40" height="40"></i>
-                                </button>
-                            </a>
-                            <a href="${editUrl}" > 
-                                <button type="button" class="btn btn-icon btn-flat-primary btn-lg " data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"><i data-feather="edit" width="40" height="40"></i></button>
-                            </a>`;
-                        },
-                        width: '12%'
-                    }
-                ],
-                drawCallback: function() {
-                    // Re-render Feather icons after the table is drawn
-                    feather.replace();
-                }
-            });
 
             function updateStatusCounts(countGroup, tipeProfiling) {
                 // Reset counts
@@ -782,69 +472,6 @@
 
 
 
-            function handlePeriodeChange() {
-                let isActive = $('#select2-periode').find(":selected").data("is_active");
-                let endDate = $('#select2-periode').find(":selected").data("end_date");
-
-                // Check if the selected period is inactive
-                if (isActive === 0) {
-                    // Check if the alert already exists, if not, create it
-                    if ($('#alert-periode_berakhir .alert-danger').length === 0) {
-                        $('#alert-periode_berakhir').html(`
-                            <div class="card-body">
-                                <div class="alert alert-danger mt-2">
-                                    <h4 class="alert-heading">
-                                        <i data-feather="alert-triangle" class="me-50"></i>Periode Profiling yang dipilih telah berakhir
-                                    </h4>
-                                    <div class="alert-body fw-normal"></div>
-                                </div>
-                            </div>
-                        `);
-                    }
-
-                    // Update the alert message with the end date
-                    $("#alert-periode_berakhir .alert-body").text(`Periode Profiling berakhir pada ${endDate}`);
-
-                    // Show the alert by appending it back if it was removed
-                    if (!$('#alert-periode_berakhir').has('.alert-danger').length) {
-                        $('#alert-periode_berakhir').append(`
-                            <div class="card-body">
-                                <div class="alert alert-danger mt-2">
-                                    <h4 class="alert-heading">
-                                        <i data-feather="alert-triangle" class="me-50"></i>Periode Profiling yang dipilih telah berakhir
-                                    </h4>
-                                    <div class="alert-body fw-normal">Periode Profiling berakhir pada ${endDate}</div>
-                                </div>
-                            </div>
-                        `);
-                    }
-                } else {
-                    // Remove the alert if the period is active
-                    $("#alert-periode_berakhir .alert-danger").parent().remove();
-                }
-
-            }
-
-            // Run the initial check without reloading the table
-            handlePeriodeChange();
-            // Bind the change event to reload the table and run the check
-            $('#select2-periode').on('change', function() {
-                handlePeriodeChange();
-                table.ajax.reload();
-            });
-
-            $('#select2-status_form').on('change', function() {
-                table.ajax.reload();
-            });
-
-
-
-
-            // Trigger change event on page load to check the initial selection
-            // $("#select2-periode").change();
-
-
-
             //Profiling Mandiri
             var id_profiling_mandiri = @json($id_profiling_mandiri);
 
@@ -857,7 +484,7 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{{ route('profiling.getData') }}",
+                    url: "{{ route('profiling_mandiri.getDataAll') }}",
                     data: function(d) {
                         d.periode_id = id_profiling_mandiri;
                         d.status_form = $('#select2-status_form_mandiri').val();
@@ -976,25 +603,20 @@
                                             </button>
                                         </a>
 
-                                        <a href="${editUrl}"> 
-                                            <button type="button" class="btn btn-icon btn-flat-primary btn-lg" 
-                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                                <i data-feather="edit" width="40" height="40"></i>
-                                            </button>
-                                        </a>
+                                        
 
                                         ${(row.action_type === 'CREATE' && 
                                         (row.status_form === 'OPEN' || row.status_form === 'DRAFT' || row.status_form === 'REJECTED')) ? `
-                                                                                                            <button type="button" class="cancel-button btn btn-icon btn-flat-danger btn-lg" 
-                                                                                                                    data-url="{{ route('form_update_usaha.cancel', ['perusahaan_id' => '__PERUSAHAAN_ID__', 'alokasi_id' => '__ALOKASI_ID__']) }}" 
-                                                                                                                    data-perusahaan_id="${row.perusahaan_id}" 
-                                                                                                                    data-alokasi_id="${row.id}" 
-                                                                                                                    data-bs-toggle="tooltip" 
-                                                                                                                    data-bs-placement="top" 
-                                                                                                                    title="Cancel">
-                                                                                                                <i data-feather="x" width="40" height="40"></i>
-                                                                                                            </button>
-                                                                                                        ` : ``}
+                                                                                                                                                <button type="button" class="cancel-button btn btn-icon btn-flat-danger btn-lg" 
+                                                                                                                                                        data-url="{{ route('form_update_usaha.cancel', ['perusahaan_id' => '__PERUSAHAAN_ID__', 'alokasi_id' => '__ALOKASI_ID__']) }}" 
+                                                                                                                                                        data-perusahaan_id="${row.perusahaan_id}" 
+                                                                                                                                                        data-alokasi_id="${row.id}" 
+                                                                                                                                                        data-bs-toggle="tooltip" 
+                                                                                                                                                        data-bs-placement="top" 
+                                                                                                                                                        title="Cancel">
+                                                                                                                                                    <i data-feather="x" width="40" height="40"></i>
+                                                                                                                                                </button>
+                                                                                                                                            ` : ``}
                                     `;
                         },
 

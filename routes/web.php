@@ -10,7 +10,9 @@ use App\Http\Controllers\DirektoriUsahaController;
 use App\Http\Controllers\ProfilingController;
 use App\Http\Controllers\FormCreateUsahaController;
 use App\Http\Controllers\FormUpdateUsahaController;
+use App\Http\Controllers\ProfilingMandiriController;
 use App\Http\Controllers\AuthController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -50,6 +52,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profiling/update/usaha/{perusahaan_id}/{alokasi_id}/history', [ProfilingController::class, 'getHistoryData'])->name('form_update_usaha.history');
     Route::post('profiling/update/usaha/{perusahaan_id}/{alokasi_id}/cancel', [ProfilingController::class, 'cancelData'])->name('form_update_usaha.cancel');
     
+    
+
 
     //Create Usaha - Form
     Route::get('profiling/create/usaha', [FormCreateUsahaController::class, 'index'])->name('form_create_usaha.index');
@@ -57,6 +61,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profiling/get-data-fulltext', [FormCreateUsahaController::class, 'getDataFulltext'])->name('getDataFulltext');
     Route::post('profiling/create/usaha', [FormCreateUsahaController::class, 'store'])->name('form_create_usaha.store');
 
+    //Profiling Mandiri
+    Route::get('profiling/mandiri/index', [ProfilingMandiriController::class, 'index'])->name('profilng_mandiri.index');
+    Route::get('/profiling/mandiri/get-data-all', [ProfilingMandiriController::class, 'getDataAll'])->name('profiling_mandiri.getDataAll');
     //Update Usaha - Form
     Route::get('profiling/update/usaha/{perusahaan_id}/{alokasi_id}', [FormUpdateUsahaController::class, 'index'])->name('form_update_usaha.index');
     

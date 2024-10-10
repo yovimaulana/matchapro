@@ -70,34 +70,6 @@
                     </li>
                 </ul>
             </li>
-            {{-- <li
-                class="nav-item {{ Route::currentRouteName() == 'direktori_usaha.index' || Route::currentRouteName() == 'direktori_usaha_profiling.index' ? 'open' : '' }}">
-                <a href="" class="d-flex align-items-center" target="">
-                    <i data-feather="database"></i>
-                    <span class="menu-title text-truncate">Direktori Usaha</span>
-                    <span class="badge rounded-pill badge-light-primary ms-auto me-1">2</span>
-                </a>
-
-                <ul class="menu-content">
-                    <li class="">
-                        <a href="{{ route('direktori_usaha.index') }}"
-                            class="d-flex align-items-center {{ Route::currentRouteName() == 'direktori_usaha.index' ? 'active text-white' : '' }}"
-                            target="">
-                            <i data-feather="circle"></i>
-                            <span class="menu-item text-truncate">Direktori Usaha</span>
-                        </a>
-                    </li>
-                    <li class="">
-                        <a href="{{ route('direktori_usaha_profiling.index') }}"
-                            class="d-flex align-items-center {{ Route::currentRouteName() == 'direktori_usaha_profiling.index' ? 'active text-white' : '' }}"
-                            target="">
-                            <i data-feather="circle"></i>
-                            <span class="menu-item text-truncate">Direktori Usaha <br>
-                                Profiling</span>
-                        </a>
-                    </li>
-                </ul>
-            </li> --}}
             <li class="nav-item {{ Route::currentRouteName() == 'direktori_usaha.index' ? 'active text-white' : '' }}">
                 <a href="{{ route('direktori_usaha.index') }}"
                     class="d-flex align-items-center {{ Route::currentRouteName() == 'direktori_usaha.index' || Route::currentRouteName() == 'direktori_usaha_profiling.index' ? 'active white-text' : '' }}""
@@ -128,6 +100,14 @@
                     </a>
                 </li>
             @endif
+            <li
+                class="nav-item {{ Route::currentRouteName() == 'profilng_mandiri.index' ? 'active text-white' : '' }}">
+                <a href="{{ route('profilng_mandiri.index') }}" class="d-flex align-items-center" target="">
+                    <i data-feather="database"></i>
+                    <span class="menu-title text-truncate">Tabel Mandiri</span>
+                </a>
+            </li>
+
         </ul>
     </div>
 </div>
