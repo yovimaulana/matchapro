@@ -12,7 +12,9 @@
             <span class="ms-25 text-primary">SBR Team</span>
             ,
             <span class="d-none d-sm-inline-block">All rights Reserved</span> |
-            <span class="d-none d-sm-inline-block">Thank you so Matcha for what you do</span>
+            <span class="d-none d-sm-inline-block">Thank you so <span
+                    style="color: #78b34d; font-weight: bold;">Matcha</span> for what you
+                do</span>
         </span>
         <span class="float-md-end d-none d-md-block">
             {{-- Hand-crafted & Made with --}}

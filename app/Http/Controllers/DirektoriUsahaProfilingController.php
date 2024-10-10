@@ -12,22 +12,32 @@ class DirektoriUsahaProfilingController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function checkPermission($permissionName){
+        
+        if(auth()->user()->getPermissionsViaRoles()->contains('name',$permissionName)){
+            return true;    
+        }
+        return false;
+    }
+
     public function index(Request $request)
     {
+        if(! ($this->checkPermission('create-new-usaha-provinsi') || $this->checkPermission('create-new-usaha-kabkot')) ){
+            abort(403);
+        }
         //
         $pageConfigs = ['sidebarCollapsed' => false];
         $breadcrumbs = [
             ['link' => "home", 'name' => "Home"], ['link' => "javascript:void(0)", 'name' => "Layouts"], ['name' => "Collapsed menu"]
         ];
-
-        
-
+   
+        $snapshot_id = DB::table('area_provinsi')->max('snapshot_id');
         if ($request->ajax()) {
             // Fetching businesses with joins and pagination
             $businesses = DB::table('business_perusahaan as bp')
-                ->join('area_provinsi as ap', function ($join) {
+                ->join('area_provinsi as ap', function ($join) use ($snapshot_id) {
                     $join->on('ap.id', '=', 'bp.provinsi_id')
-                        ->where('ap.snapshot_id', '=', 4);
+                        ->where('ap.snapshot_id', '=', $snapshot_id);
                 })
                 ->join('area_kabupaten_kota as akk', 'akk.id', '=', 'bp.kabupaten_kota_id')
                 ->join('area_kecamatan as ak', 'ak.id', '=', 'bp.kecamatan_id')
@@ -38,7 +48,7 @@ class DirektoriUsahaProfilingController extends Controller
                     'akk.nama as kabupaten_nama',
                     'ak.nama as kecamatan_nama',
                     'akd.nama as kelurahan_nama'
-                );
+                )->orderBy('updated_at', 'desc');
 
             $businesses = $businesses->paginate(10);
 
@@ -52,9 +62,9 @@ class DirektoriUsahaProfilingController extends Controller
 
         // Use the new temporary connection
         $businesses = DB::table('business_perusahaan as bp')
-            ->join('area_provinsi as ap', function($join) {
+            ->join('area_provinsi as ap', function($join) use ($snapshot_id){
                 $join->on('ap.id', '=', 'bp.provinsi_id')
-                    ->where('ap.snapshot_id', '=', 4);
+                    ->where('ap.snapshot_id', '=', $snapshot_id);
             })
             ->join('area_kabupaten_kota as akk', 'akk.id', '=', 'bp.kabupaten_kota_id')
             ->join('area_kecamatan as ak', 'ak.id', '=', 'bp.kecamatan_id')

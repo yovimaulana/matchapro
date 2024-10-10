@@ -46,11 +46,16 @@ Route::middleware(['auth'])->group(function () {
 
     //Profiling
     Route::get('profiling', [ProfilingController::class, 'index'])->name('profiling.index');
-    Route::get('profiling/update/usaha/{perusahaan_id}/{alokasi_id}/history', [FormUpdateUsahaController::class, 'index'])->name('form_update_usaha3.index');
-    Route::get('profiling/update/usaha/{perusahaan_id}/{alokasi_id}/cancel', [FormUpdateUsahaController::class, 'index'])->name('form_update_usaha4.index');
+    Route::get('/profiling/get-data', [ProfilingController::class, 'getData'])->name('profiling.getData');
+    Route::get('profiling/update/usaha/{perusahaan_id}/{alokasi_id}/history', [ProfilingController::class, 'getHistoryData'])->name('form_update_usaha.history');
+    Route::post('profiling/update/usaha/{perusahaan_id}/{alokasi_id}/cancel', [ProfilingController::class, 'cancelData'])->name('form_update_usaha.cancel');
     
+
     //Create Usaha - Form
     Route::get('profiling/create/usaha', [FormCreateUsahaController::class, 'index'])->name('form_create_usaha.index');
+    Route::get('/profiling/get-data-kelurahan_desa', [FormCreateUsahaController::class, 'getDataKelurahanDesa'])->name('getDataKelurahanDesa');
+    Route::get('/profiling/get-data-fulltext', [FormCreateUsahaController::class, 'getDataFulltext'])->name('getDataFulltext');
+    Route::post('profiling/create/usaha', [FormCreateUsahaController::class, 'store'])->name('form_create_usaha.store');
 
     //Update Usaha - Form
     Route::get('profiling/update/usaha/{perusahaan_id}/{alokasi_id}', [FormUpdateUsahaController::class, 'index'])->name('form_update_usaha.index');
