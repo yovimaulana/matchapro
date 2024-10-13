@@ -53,7 +53,7 @@ class ProgressProfilingController extends Controller
 
         //Pusat
         if(auth()->user()->getPermissionsViaRoles()->contains('name', 'view-progress-profiling-nasional')){
-            dd('user pusat');
+            
         }
 
 
