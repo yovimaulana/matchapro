@@ -60,7 +60,7 @@
 
 
     <!-- Goals Section -->
-    <section class="goals-section text-center py-5" style="background: #f9f9f9;">
+    <section class="goals-section text-center py-5">
         <div class="container animate__animated animate__fadeInUp">
             <h2 style="font-size: 48px; color: #78b34d;"><i class="fas fa-bullseye"></i> Tujuan
                 MatchaPro</h2>
