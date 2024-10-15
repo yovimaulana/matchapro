@@ -145,13 +145,13 @@
                     <i data-feather="help-circle" class="font-medium-3 text-muted cursor-pointer"></i>
                 </div>
                 <div class="card-body p-0">
-                    <div style="margin: 10px !important;">
+                    {{-- <div style="margin: 10px !important;">
                         <ul class="list-unstyled">
                             <li>Kalau User Level Pusat, yang ditampikan barchart provinsi</li>
                             <li>Kalau User Level Provinsi, yang ditampikan barchart kabupaten/kota</li>
                             <li>Kalau User Level Kabupaten/Kota, yang ditampikan barchart per user</li>
                         </ul>
-                    </div>
+                    </div> --}}
                     <div id="progress-profiling-chart" class="my-2"></div>
                 </div>
             </div>
