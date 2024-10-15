@@ -43,7 +43,13 @@
                         MatchaPro</h2>
 
                     <div class="card-text" style="font-size: 18px;">
-                        <p>MatchaPro adalah alat yang dirancang untuk melakukan <strong>profiling data SBR</strong>, yang
+                        <p>MatchaPro, atau Matching Assessment Profiling, adalah aplikasi yang dirancang untuk melakukan
+                            profiling data SBR.
+                            Kegiatan profiling dilakukan sebagai tahapan untuk mendapatkan gambaran secara utuh unit
+                            statistik dan jaringan/struktur hubungan antar unit dalam group di Indonesia agar sejalan dengan
+                            konsep System of National Account 2008 (SNA 2008).
+                        </p>
+                        {{-- <p>MatchaPro adalah alat yang dirancang untuk melakukan <strong>profiling data SBR</strong>, yang
                             mencakup:</p>
                         <ul>
                             <li><i class="fas fa-database text-success"></i> Memetakan unit statistik dalam jaringan grup
@@ -51,7 +57,7 @@
                             <li><i class="fas fa-sitemap text-success"></i> Menyesuaikan dengan konsep <strong>SNA
                                     2008</strong>
                                 dalam konteks Indonesia</li>
-                        </ul>
+                        </ul> --}}
                     </div>
                 </div>
             </div>
