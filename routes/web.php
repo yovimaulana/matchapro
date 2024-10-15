@@ -33,7 +33,7 @@ Route::post('login', [AuthController::class, 'login'])->name('login.post');
 
 Route::middleware(['sso-bps'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::get('home', [HomeController::class, 'index'])->name('home');
+    Route::get('home', [HomeController::class, 'index'])->name('home2');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     //Dashboard
@@ -42,6 +42,7 @@ Route::middleware(['sso-bps'])->group(function () {
     //Progress Profiling
     //Wilayah
     Route::get('profiling/progress/wilayah', [ProgressProfilingController::class, 'wilayah_index'])->name('progress_wilayah.index');
+    Route::get('profiling/progress/status_statistics', [ProgressProfilingController::class, 'getStatusStatistics'])->name('progress_wilayah.status_statistics');
     //Profiler
     Route::get('profiling/progress/profiler', [ProgressProfilingController::class, 'profiler_index'])->name('progress_profiler.index');
 
